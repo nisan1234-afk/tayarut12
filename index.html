@@ -66,6 +66,23 @@
     font-family:inherit;
   }
   .name-row input::placeholder{color:#a9a290;}
+  .code-display{
+    margin-top:8px; font-size:.85rem; color:#c9c2b4;
+  }
+  .code-display span{
+    font-weight:800; color:#fff; letter-spacing:2px;
+    direction:ltr; unicode-bidi:isolate; display:inline-block;
+  }
+  .input-light{
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:9px 12px;
+    font-family:inherit;
+    font-size:.9rem;
+    background:var(--paper);
+    color:var(--ink);
+    direction:ltr; text-align:center; letter-spacing:2px;
+  }
 
   /* ===== progress summary ===== */
   .summary{
@@ -179,6 +196,7 @@
     <div class="name-row">
       <input type="text" id="studentName" placeholder="השם שלך (כדי שהמורה ידע מי שלח)">
     </div>
+    <div class="code-display">הקוד האישי שלך: <span id="myCode">------</span> · שמור אותו לשימוש ממחשב אחר</div>
   </header>
 
   <div class="summary">
@@ -189,18 +207,14 @@
   <div id="checklist"></div>
 
   <div class="item" style="margin-top:10px;">
-    <div class="item-text" style="font-weight:700;">המשך ממחשב אחר / בפעם הבאה</div>
+    <div class="item-text" style="font-weight:700;">המשך ממחשב אחר</div>
     <div class="item-meta">
-      לפני שעוזבים: לחצו "קבל קוד שמירה", העתיקו את הקוד והדביקו אותו לעצמכם (למשל בקובץ ה-Word שעליו אתם עובדים).
-      כשחוזרים - הדביקו אותו כאן ולחצו "שחזור".
+      הקלידו את הקוד האישי שלכם (6 ספרות, מופיע למעלה) ולחצו "שחזור" כדי לטעון את ההתקדמות שנשלחה לאחרונה מהגיליון.
     </div>
     <div class="name-row" style="margin-top:8px;">
-      <textarea id="codeBox" rows="2" placeholder="קוד שמירה יופיע / יודבק כאן"
-        style="flex:1;min-width:160px;border:1px solid var(--line);border-radius:8px;padding:9px 12px;font-family:inherit;font-size:.85rem;resize:vertical;background:var(--paper);color:var(--ink);"></textarea>
-    </div>
-    <div class="actions" style="position:static;padding:6px 0 0;">
-      <button class="btn btn-secondary" id="getCodeBtn">קבל קוד שמירה</button>
-      <button class="btn btn-secondary" id="restoreBtn">שחזור מקוד</button>
+      <input type="text" id="restoreCodeInput" class="input-light" maxlength="6" inputmode="numeric"
+        placeholder="123456" style="flex:none; width:120px;">
+      <button class="btn btn-secondary" id="restoreBtn" style="flex:none;">שחזור</button>
     </div>
   </div>
 
@@ -208,13 +222,13 @@
     <button class="btn btn-secondary" id="resetBtn">איפוס</button>
     <button class="btn btn-primary" id="sendBtn">שליחת דוח למורה</button>
   </div>
-  <div class="note">ההתקדמות נשמרת אוטומטית גם בדפדפן הזה. לחיצה על "שליחת דוח" תפתח הודעת מייל מוכנה - רק לוחצים שלח.</div>
+  <div class="note">ההתקדמות נשמרת אוטומטית גם בדפדפן הזה. לחיצה על "שליחת דוח" שולחת את הנתונים לגיליון.</div>
 
 </div>
 
 <script>
 // ===== עריכה: הדבק כאן את כתובת ה-Web App של Apps Script (ראה Code.gs) =====
-const SHEET_URL = "https://script.google.com/macros/s/AKfycbxmXTkULks2NN4sqXkHPJMjGDQ-H02ClfX3MZ6u4HSgruO5zaPFSfbLMLUnpKKjV6JN/exec";
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbx3Ujk6M9xgs0oi92YUKTQvlUdqoj1dGUgZQFbJxoh4xd15fxeUlSIwFiulbk3wjkRG/exec";
 
 const DATA = [
   {section:"יסודות טכניים (חוצים את כל המשימה)", items:[
@@ -257,6 +271,11 @@ function save(state){
 let state = load();
 state.name = state.name || "";
 state.items = state.items || {};
+if(!state.code){
+  state.code = String(Math.floor(100000 + Math.random()*900000));
+  save(state);
+}
+document.getElementById("myCode").textContent = state.code;
 
 const list = document.getElementById("checklist");
 const nameInput = document.getElementById("studentName");
@@ -344,29 +363,38 @@ document.getElementById("resetBtn").addEventListener("click", ()=>{
   }
 });
 
-document.getElementById("getCodeBtn").addEventListener("click", ()=>{
-  const code = btoa(unescape(encodeURIComponent(JSON.stringify(state))));
-  const box = document.getElementById("codeBox");
-  box.value = code;
-  box.select();
-  try{ document.execCommand("copy"); alert("הקוד הועתק! הדביקו אותו לעצמכם לשימוש בפעם הבאה."); }
-  catch(e){ alert("העתיקו את הקוד מהתיבה ושמרו אותו."); }
-});
-
 document.getElementById("restoreBtn").addEventListener("click", ()=>{
-  const box = document.getElementById("codeBox");
-  try{
-    const restored = JSON.parse(decodeURIComponent(escape(atob(box.value.trim()))));
-    state = restored;
-    state.items = state.items || {};
-    state.name = state.name || "";
-    save(state);
-    nameInput.value = state.name;
-    render();
-    alert("ההתקדמות שוחזרה בהצלחה!");
-  }catch(e){
-    alert("הקוד לא תקין. בדקו שהדבקתם את כל הקוד.");
+  if(SHEET_URL.indexOf("PASTE_YOUR") === 0){
+    alert("המורה עדיין לא חיבר את הגיליון - דבר עם המורה.");
+    return;
   }
+  const codeInput = document.getElementById("restoreCodeInput");
+  const code = codeInput.value.trim();
+  if(!/^\d{6}$/.test(code)){
+    alert("יש להקליד קוד אישי בן 6 ספרות.");
+    return;
+  }
+  const btn = document.getElementById("restoreBtn");
+  btn.disabled = true;
+  btn.textContent = "טוען...";
+  fetch(SHEET_URL + "?code=" + code)
+    .then(r=>r.json())
+    .then(data=>{
+      if(data.status === "ok"){
+        state.code = code;
+        state.name = data.name || state.name;
+        state.items = data.items || {};
+        save(state);
+        nameInput.value = state.name;
+        document.getElementById("myCode").textContent = state.code;
+        render();
+        alert("ההתקדמות שוחזרה בהצלחה!");
+      } else {
+        alert("לא נמצא קוד כזה בגיליון. אולי עדיין לא נשלח דוח עם הקוד הזה.");
+      }
+    })
+    .catch(()=> alert("השחזור נכשל - בדקו חיבור לאינטרנט ונסו שוב."))
+    .finally(()=>{ btn.disabled = false; btn.textContent = "שחזור"; });
 });
 
 document.getElementById("sendBtn").addEventListener("click", ()=>{
