@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מוכנות למשימת תיירות</title>
+<style>
+  :root{
+    --ink:#1c2430;
+    --paper:#faf6ef;
+    --card:#ffffff;
+    --line:#e3dccd;
+    --accent:#b1532b;     /* terracotta - boarding-pass stamp */
+    --accent-soft:#f3e4da;
+    --good:#3f7d5c;
+    --good-soft:#e3efe8;
+    --muted:#8a8478;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:"Heebo","Arial Hebrew","Noto Sans Hebrew",sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    direction:rtl;
+    line-height:1.55;
+  }
+  .wrap{max-width:760px;margin:0 auto;padding:18px 16px 60px;}
+
+  /* ===== header / boarding-pass strip ===== */
+  header{
+    background:var(--ink);
+    color:var(--paper);
+    border-radius:14px;
+    padding:18px 20px;
+    margin-bottom:16px;
+    position:relative;
+    overflow:hidden;
+  }
+  header::before{
+    content:"";
+    position:absolute; inset:0;
+    background:
+      repeating-linear-gradient(135deg, rgba(255,255,255,.05) 0 10px, transparent 10px 20px);
+  }
+  header h1{
+    margin:0 0 4px;
+    font-size:1.35rem;
+    font-weight:800;
+    letter-spacing:.3px;
+  }
+  header p{margin:0;color:#c9c2b4;font-size:.92rem;}
+
+  .name-row{
+    display:flex; gap:8px; align-items:center; margin-top:14px; flex-wrap:wrap;
+  }
+  .name-row input{
+    flex:1; min-width:160px;
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.25);
+    color:#fff;
+    border-radius:8px;
+    padding:9px 12px;
+    font-size:.95rem;
+    font-family:inherit;
+  }
+  .name-row input::placeholder{color:#a9a290;}
+
+  /* ===== progress summary ===== */
+  .summary{
+    display:flex; gap:10px; margin-bottom:18px;
+  }
+  .stat{
+    flex:1;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:12px 10px;
+    text-align:center;
+  }
+  .stat .num{font-size:1.6rem; font-weight:800; color:var(--accent);}
+  .stat .lbl{font-size:.78rem; color:var(--muted); margin-top:2px;}
+
+  /* ===== sections ===== */
+  .section-title{
+    font-size:1.02rem;
+    font-weight:800;
+    margin:22px 4px 8px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .section-title .badge{
+    background:var(--accent);
+    color:#fff;
+    font-size:.72rem;
+    font-weight:700;
+    border-radius:6px;
+    padding:2px 8px;
+    white-space:nowrap;
+  }
+
+  .item{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:12px 14px;
+    margin-bottom:8px;
+    display:flex; flex-direction:column; gap:10px;
+    transition:border-color .15s, background .15s;
+  }
+  .item.done{
+    background:var(--good-soft);
+    border-color:#cfe3d7;
+  }
+  .item-top{
+    display:flex; align-items:flex-start; gap:10px;
+  }
+  .item-top input[type=checkbox]{
+    width:22px; height:22px; flex:none; margin-top:1px;
+    accent-color: var(--good);
+    cursor:pointer;
+  }
+  .item-text{flex:1; font-size:.95rem;}
+  .item-meta{
+    font-size:.75rem; color:var(--muted); margin-top:2px;
+  }
+
+  .conf-row{
+    display:flex; align-items:center; gap:8px;
+    padding-right:32px;
+  }
+  .conf-label{font-size:.78rem; color:var(--muted); white-space:nowrap;}
+  .conf-scale{display:flex; gap:5px;}
+  .conf-scale button{
+    width:30px; height:30px;
+    border-radius:50%;
+    border:1px solid var(--line);
+    background:var(--paper);
+    color:var(--ink);
+    font-weight:700;
+    font-size:.85rem;
+    cursor:pointer;
+    font-family:inherit;
+    transition:all .12s;
+  }
+  .conf-scale button.active{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:#fff;
+  }
+
+  /* ===== footer actions ===== */
+  .actions{
+    position:sticky; bottom:0;
+    background:linear-gradient(to top, var(--paper) 70%, transparent);
+    padding:18px 0 6px;
+    display:flex; gap:10px; flex-wrap:wrap;
+  }
+  .btn{
+    flex:1;
+    border:none; border-radius:10px;
+    padding:13px 16px;
+    font-size:.95rem; font-weight:700;
+    font-family:inherit;
+    cursor:pointer;
+    min-width:140px;
+  }
+  .btn-primary{background:var(--accent); color:#fff;}
+  .btn-secondary{background:var(--card); color:var(--ink); border:1px solid var(--line);}
+  .note{font-size:.78rem; color:var(--muted); text-align:center; margin-top:8px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>✈ מוכנות למשימת תיירות</h1>
+    <p>סמן/י כל נושא שעברת עליו, ודרג/י כמה אתה מרגיש שולט בו (1 = עדיין לא, 5 = בטוח לגמרי)</p>
+    <div class="name-row">
+      <input type="text" id="studentName" placeholder="השם שלך (כדי שהמורה ידע מי שלח)">
+    </div>
+  </header>
+
+  <div class="summary">
+    <div class="stat"><div class="num" id="doneCount">0/16</div><div class="lbl">נושאים שעברתי</div></div>
+    <div class="stat"><div class="num" id="avgConf">-</div><div class="lbl">ביטחון ממוצע (1-5)</div></div>
+  </div>
+
+  <div id="checklist"></div>
+
+  <div class="item" style="margin-top:10px;">
+    <div class="item-text" style="font-weight:700;">המשך ממחשב אחר / בפעם הבאה</div>
+    <div class="item-meta">
+      לפני שעוזבים: לחצו "קבל קוד שמירה", העתיקו את הקוד והדביקו אותו לעצמכם (למשל בקובץ ה-Word שעליו אתם עובדים).
+      כשחוזרים - הדביקו אותו כאן ולחצו "שחזור".
+    </div>
+    <div class="name-row" style="margin-top:8px;">
+      <textarea id="codeBox" rows="2" placeholder="קוד שמירה יופיע / יודבק כאן"
+        style="flex:1;min-width:160px;border:1px solid var(--line);border-radius:8px;padding:9px 12px;font-family:inherit;font-size:.85rem;resize:vertical;background:var(--paper);color:var(--ink);"></textarea>
+    </div>
+    <div class="actions" style="position:static;padding:6px 0 0;">
+      <button class="btn btn-secondary" id="getCodeBtn">קבל קוד שמירה</button>
+      <button class="btn btn-secondary" id="restoreBtn">שחזור מקוד</button>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-secondary" id="resetBtn">איפוס</button>
+    <button class="btn btn-primary" id="sendBtn">שליחת דוח למורה</button>
+  </div>
+  <div class="note">ההתקדמות נשמרת אוטומטית גם בדפדפן הזה. לחיצה על "שליחת דוח" תפתח הודעת מייל מוכנה - רק לוחצים שלח.</div>
+
+</div>
+
+<script>
+// ===== עריכה: הדבק כאן את כתובת ה-Web App של Apps Script (ראה Code.gs) =====
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbxmXTkULks2NN4sqXkHPJMjGDQ-H02ClfX3MZ6u4HSgruO5zaPFSfbLMLUnpKKjV6JN/exec";
+
+const DATA = [
+  {section:"יסודות טכניים (חוצים את כל המשימה)", items:[
+    {id:"t1", text:"בדיקה שהיוזר האישי שלי ב-Travel Booster תקין ועובד (כולל הרשאות לכל הפעולות)", imp:10},
+    {id:"t2", text:"פתיחה, עיצוב ושמירה של קובץ Word / PDF", imp:9},
+    {id:"t3", text:"צילום מסך והדבקה נכונה ומסודרת לתוך הקובץ", imp:10},
+    {id:"t4", text:"שליחת הקובץ במייל לבוחן/ת באופן עצמאי (Word/PDF בלבד, לא Google Docs)", imp:9},
+    {id:"t5", text:"עבודה שוטפת בתוכנות ובאתרים באנגלית", imp:6},
+  ]},
+  {section:"חלק א' - בניית מסלול (20 נק')", items:[
+    {id:"a1", text:"קריאה והבנה מדויקת של התרחיש - יעד, תאריכים, מספר נוסעים, דרישות מיוחדות", imp:8},
+    {id:"a2", text:"חיפוש וניתוח טיסות ב-Skyscanner - שעות המראה/נחיתה, חברת תעופה, מחיר", imp:9},
+    {id:"a3", text:"חיפוש השכרת רכב באתר הנבחר - מיקום איסוף/החזרה, סוג רכב, מחיר", imp:8},
+    {id:"a4", text:"חיפוש אטרקציות מתאימות (כולל אטרקציות בתשלום) ליעד ולקהל", imp:8},
+    {id:"a5", text:"בניית מסלול מלא ב-Google My Maps - חלוקה לימים, סימון צבעים, ציון עלויות כניסה", imp:10},
+    {id:"a6", text:"הזנת כל המידע (טיסה, רכב, מלון, אטרקציות) לדוקט ב-Travel Booster", imp:9},
+    {id:"a7", text:"צילום מסך של המסלול היומי מ-Google My Maps והדבקה לקובץ הסופי", imp:9},
+  ]},
+  {section:"חלק ב' - Travel Booster קבוצות", items:[
+    {id:"b1", text:"תהליך פתיחה וניהול של הזמנת קבוצה ב-Travel Booster", imp:8},
+    {id:"b2", text:"חישוב מחיר סופי לאדם, כולל עמלה", imp:9},
+  ]},
+  {section:"תיאוריה ומושגים", items:[
+    {id:"c1", text:"שליטה במושגי יסוד בתיירות (בלי גוגל ובלי AI בזמן הבחינה)", imp:7},
+    {id:"c2", text:"הכנה לשאלות בעל-פה על החומר התיאורטי", imp:6},
+  ]},
+];
+
+const TOTAL = DATA.reduce((n,s)=>n+s.items.length,0);
+const STORAGE_KEY = "tourism-checklist-v1";
+
+function load(){
+  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+  catch(e){ return {}; }
+}
+function save(state){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+let state = load();
+state.name = state.name || "";
+state.items = state.items || {};
+
+const list = document.getElementById("checklist");
+const nameInput = document.getElementById("studentName");
+nameInput.value = state.name;
+nameInput.addEventListener("input", ()=>{ state.name = nameInput.value; save(state); });
+
+function render(){
+  list.innerHTML = "";
+  DATA.forEach(section=>{
+    const title = document.createElement("div");
+    title.className = "section-title";
+    title.innerHTML = `<span>${section.section}</span>`;
+    list.appendChild(title);
+
+    section.items.forEach(item=>{
+      const st = state.items[item.id] || {done:false, conf:0};
+      const card = document.createElement("div");
+      card.className = "item" + (st.done ? " done" : "");
+
+      const top = document.createElement("div");
+      top.className = "item-top";
+
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = st.done;
+      cb.addEventListener("change", ()=>{
+        st.done = cb.checked;
+        state.items[item.id] = st;
+        save(state);
+        card.classList.toggle("done", st.done);
+        updateSummary();
+      });
+
+      const txt = document.createElement("div");
+      txt.className = "item-text";
+      txt.innerHTML = item.text + `<div class="item-meta">חשיבות במבחן: ${item.imp}/10</div>`;
+
+      top.appendChild(cb);
+      top.appendChild(txt);
+      card.appendChild(top);
+
+      const confRow = document.createElement("div");
+      confRow.className = "conf-row";
+      confRow.innerHTML = `<span class="conf-label">כמה אני שולט בזה:</span>`;
+      const scale = document.createElement("div");
+      scale.className = "conf-scale";
+      for(let i=1;i<=5;i++){
+        const b = document.createElement("button");
+        b.textContent = i;
+        if(st.conf === i) b.classList.add("active");
+        b.addEventListener("click", ()=>{
+          st.conf = (st.conf === i) ? 0 : i;
+          state.items[item.id] = st;
+          save(state);
+          scale.querySelectorAll("button").forEach((bb,idx)=> bb.classList.toggle("active", idx+1===st.conf));
+          updateSummary();
+        });
+        scale.appendChild(b);
+      }
+      confRow.appendChild(scale);
+      card.appendChild(confRow);
+
+      list.appendChild(card);
+    });
+  });
+  updateSummary();
+}
+
+function updateSummary(){
+  let done=0, confSum=0, confCount=0;
+  DATA.forEach(section=> section.items.forEach(item=>{
+    const st = state.items[item.id];
+    if(st && st.done) done++;
+    if(st && st.conf>0){ confSum+=st.conf; confCount++; }
+  }));
+  document.getElementById("doneCount").textContent = `${done}/${TOTAL}`;
+  document.getElementById("avgConf").textContent = confCount ? (confSum/confCount).toFixed(1) : "-";
+}
+
+document.getElementById("resetBtn").addEventListener("click", ()=>{
+  if(confirm("לאפס את כל הסימונים?")){
+    state.items = {};
+    save(state);
+    render();
+  }
+});
+
+document.getElementById("getCodeBtn").addEventListener("click", ()=>{
+  const code = btoa(unescape(encodeURIComponent(JSON.stringify(state))));
+  const box = document.getElementById("codeBox");
+  box.value = code;
+  box.select();
+  try{ document.execCommand("copy"); alert("הקוד הועתק! הדביקו אותו לעצמכם לשימוש בפעם הבאה."); }
+  catch(e){ alert("העתיקו את הקוד מהתיבה ושמרו אותו."); }
+});
+
+document.getElementById("restoreBtn").addEventListener("click", ()=>{
+  const box = document.getElementById("codeBox");
+  try{
+    const restored = JSON.parse(decodeURIComponent(escape(atob(box.value.trim()))));
+    state = restored;
+    state.items = state.items || {};
+    state.name = state.name || "";
+    save(state);
+    nameInput.value = state.name;
+    render();
+    alert("ההתקדמות שוחזרה בהצלחה!");
+  }catch(e){
+    alert("הקוד לא תקין. בדקו שהדבקתם את כל הקוד.");
+  }
+});
+
+document.getElementById("sendBtn").addEventListener("click", ()=>{
+  if(SHEET_URL.indexOf("PASTE_YOUR") === 0){
+    alert("המורה עדיין לא חיבר את הגיליון - דבר עם המורה.");
+    return;
+  }
+  const btn = document.getElementById("sendBtn");
+  btn.disabled = true;
+  btn.textContent = "שולח...";
+  fetch(SHEET_URL, {
+    method: "POST",
+    headers: {"Content-Type": "text/plain;charset=utf-8"},
+    body: JSON.stringify(state)
+  })
+  .then(()=>{
+    btn.textContent = "נשלח בהצלחה ✓";
+    setTimeout(()=>{ btn.textContent = "שליחת דוח למורה"; btn.disabled = false; }, 2000);
+  })
+  .catch(()=>{
+    alert("השליחה נכשלה - בדקו חיבור לאינטרנט ונסו שוב.");
+    btn.textContent = "שליחת דוח למורה";
+    btn.disabled = false;
+  });
+});
+
+render();
+</script>
+</body>
+</html>
